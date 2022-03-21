@@ -58,6 +58,7 @@ flutter {
 dependencies {
     // Import the Firebase BoM
     implementation platform('com.google.firebase:firebase-bom:29.1.0')
+    implementation 'com.android.support:multidex:1.0.3'
 
 
     // Add the dependency for the Firebase SDK for Google Analytics

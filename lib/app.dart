@@ -13,15 +13,12 @@ class _MyHomePageState extends State<MyHomePage> {
   List <List<bool>> checkvalue=[];
 
   List list = [];
-  CollectionReference bff = FirebaseFirestore.instance.collection("menu");
-
-  getData() async {
-    QuerySnapshot dbf = await bff.where('type',isEqualTo:"Drinks").get();
-    dbf.docs.forEach((element) {
-      setState(() {
-        list.add(element.data());
-      });
-      print('kkkkkkkkkkkkkkk');
+  CollectionReference dat=FirebaseFirestore.instance.collection("users");
+  getData()async{
+    QuerySnapshot ret=await dat.get();
+    list=ret.docs;
+    list.forEach((element) {
+      print(element.data());
     });
   }
 

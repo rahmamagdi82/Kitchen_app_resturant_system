@@ -8,18 +8,24 @@ class MyHomePage extends StatefulWidget {
   createState() => _MyHomePageState();
 }
 class _MyHomePageState extends State<MyHomePage> {
+
   List <int> count=[];
   List <List<bool>> checkvalue=[];
   List order = [];
-  List<List> show=[];
+  List <List>show=[];
   List docid=[];
   CollectionReference dat=FirebaseFirestore.instance.collection("delivery");
+
   Future getData()async{
     QuerySnapshot db = await dat.get();
     db.docs.forEach((element) {
       setState(() {
         order.add(element.get('order'));
-        docid.add(element.id);
+        for(var j in (element.get('order')).values) {
+          if (j[3] == '0') {
+              docid.add(element.id);
+          }
+        }
         count.add(0);
         checkvalue.add([]);
         show.add([]);
@@ -32,11 +38,23 @@ class _MyHomePageState extends State<MyHomePage> {
           if(j[3]=='0') {
             show[i].add(j);
           }
+          if(show[i].isEmpty){
+            show.removeAt(i);
+          }
         });
       }
     }
+    for(int i=0;i<docid.length;i++){
+      for(int j=i+1;j<docid.length;j++){
+        if(docid[i]==docid[j]){
+          docid.removeAt(i);
+        }
+      }
+
+    }
   }
 
+  @override
   void initState(){
     getData();
     super.initState();
@@ -44,14 +62,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-
-    for(int i=0;i<show.length;i++){
-      if(show[i].isEmpty==true){
-        show.removeAt(i);
-        docid.removeAt(i);
-      }
-    }
-
+    print(show);
+    print(docid);
+    print('len or= ${order.length}');
+    print('len sh=${show.length}');
     return Scaffold(
       appBar:AppBar(
         title: Text('The Kitchen',style: TextStyle(color: Colors.white,fontSize:30)),
@@ -65,6 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text('Unprepared Orders :',style: TextStyle(color: Colors.black,fontSize:28)),
             ),
             for(int i=0;i<show.length;i++)
+              if(show[i].isNotEmpty)
               Row(
                 children: [
                   Card(
@@ -127,14 +142,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                     j[3] = '1';
                                   }
                                   CollectionReference data = FirebaseFirestore.instance.collection("delivery");
-                                  await data.doc(docid[i]).update(
-                                    {"order": order[i]},
-                                  );
+                                  await data.doc(docid[i]).update({"order": order[i]});
                                   setState(() {
-                                    show[i]=[];
+                                   show.removeAt(i);
+                                   docid.removeAt(i);
                                   });
                                 }
                                 print(show);
+                                print(docid);
                               },
                               child: Text('Done',style:TextStyle(fontSize: 30)),
                             ),

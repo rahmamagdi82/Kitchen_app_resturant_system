@@ -17,9 +17,9 @@ class _MyHomePageState extends State<MyHomePage> {
   List id=[];
 
 int k=0;
-  CollectionReference dat=FirebaseFirestore.instance.collection("delivery");
  getData()async{
-    QuerySnapshot db = await dat.get();
+   CollectionReference dat=FirebaseFirestore.instance.collection("delivery");
+   QuerySnapshot db = await dat.get();
     db.docs.forEach((element) {
       int c=0;
       setState(() {
@@ -30,23 +30,16 @@ int k=0;
             c++;
             checkvalue[k].add(false);
             show[k].add((element.get('order'))['order${j}']);
-            if((element.get('order')).length == c){
+            if((element.get('order')).length == c ){
               docid.add(element.id);
               count.add(0);
             }
+
           }
         }
       });
       k++;
     });
-    for(int i=0;i<show.length;i++){
-      if(show[i].isEmpty){
-        show.removeAt(i);
-      }
-      if(checkvalue[i].isEmpty){
-        checkvalue.removeAt(i);
-      }
-    }
   }
 
   @override
@@ -58,17 +51,13 @@ int k=0;
   @override
   Widget build(BuildContext context) {
     for(int i=0;i<show.length;i++){
-      if(show[i].isEmpty){
-        show.removeAt(i);
-        print('show2=$show');
-      }
-      if(checkvalue[i].isEmpty){
-        checkvalue.removeAt(i);
+      show.removeWhere((element) => element.length==0);
+        if(checkvalue[i].isEmpty){
+        checkvalue.removeWhere((element) => element.length==0);
       }
     }
     print('show=$show');
     print('docid=$docid');
-    print('id $id');
     print('cont $count');
     print('t/f $checkvalue');
     print('len sh=${show.length}');
@@ -157,7 +146,7 @@ int k=0;
                                   checkvalue.clear();
                                   show.clear();
                                   docid.clear();
-                                  //getData();
+                                  getData();
                                 }
                                 print('update show=$show');
                                 print('update id=$docid');

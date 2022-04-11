@@ -14,43 +14,38 @@ class _MyHomePageState extends State<MyHomePage> {
   List order = [];
   List <List>show=[];
   List docid=[];
-  CollectionReference dat=FirebaseFirestore.instance.collection("delivery");
+  List id=[];
 
-  Future getData()async{
+int k=0;
+  CollectionReference dat=FirebaseFirestore.instance.collection("delivery");
+ getData()async{
     QuerySnapshot db = await dat.get();
     db.docs.forEach((element) {
+      int c=0;
       setState(() {
-        order.add(element.get('order'));
-        for(var j in (element.get('order')).values) {
-          if (j[3] == '0') {
-              docid.add(element.id);
-          }
-        }
-        count.add(0);
         checkvalue.add([]);
         show.add([]);
-      });
-    });
-    for(int i=0;i<order.length;i++){
-      for(var j in order[i].values){
-        setState((){
-          checkvalue[i].add(false);
-          if(j[3]=='0') {
-            show[i].add(j);
+        for(int j=0;j<(element.get('order')).length;j++){
+          if((element.get('order'))['order${j}'][3]=='0'){
+            c++;
+            checkvalue[k].add(false);
+            show[k].add((element.get('order'))['order${j}']);
+            if((element.get('order')).length == c){
+              docid.add(element.id);
+              count.add(0);
+            }
           }
-          if(show[i].isEmpty){
-            show.removeAt(i);
-          }
-        });
-      }
-    }
-    for(int i=0;i<docid.length;i++){
-      for(int j=i+1;j<docid.length;j++){
-        if(docid[i]==docid[j]){
-          docid.removeAt(i);
         }
+      });
+      k++;
+    });
+    for(int i=0;i<show.length;i++){
+      if(show[i].isEmpty){
+        show.removeAt(i);
       }
-
+      if(checkvalue[i].isEmpty){
+        checkvalue.removeAt(i);
+      }
     }
   }
 
@@ -62,9 +57,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    print(show);
-    print(docid);
-    print('len or= ${order.length}');
+    for(int i=0;i<show.length;i++){
+      if(show[i].isEmpty){
+        show.removeAt(i);
+        print('show2=$show');
+      }
+      if(checkvalue[i].isEmpty){
+        checkvalue.removeAt(i);
+      }
+    }
+    print('show=$show');
+    print('docid=$docid');
+    print('id $id');
+    print('cont $count');
+    print('t/f $checkvalue');
     print('len sh=${show.length}');
     return Scaffold(
       appBar:AppBar(
@@ -76,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             Container(
               //padding: EdgeInsets.all(3),
-              child: Text('Unprepared Orders :',style: TextStyle(color: Colors.black,fontSize:28)),
+                child: Text('Unprepared Orders :',style: TextStyle(color: Colors.black,fontSize:28)),
             ),
             for(int i=0;i<show.length;i++)
               if(show[i].isNotEmpty)
@@ -108,16 +114,18 @@ class _MyHomePageState extends State<MyHomePage> {
                                 children:[
                                   for(int m=0;m<show[i].length;m++)
                                     CheckboxListTile(
-                                      title: Text(show[i][m][1]+'x '+show[i][m][0]),
+                                      title: Text((show[i][m])[1]+'x '+(show[i][m])[0]),
                                       onChanged: (bool? value) {
                                         setState(() {
                                           if (checkvalue[i][m] == true) {
                                             checkvalue[i][m] = false;
                                             count[i]--;
+                                            print('incount= $count');
                                           }
                                           else {
                                             checkvalue[i][m] = true;
                                             count[i]++;
+                                            print('incount= $count');
                                           }
                                         });
                                       },
@@ -138,18 +146,21 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               onPressed: ()  async{
                                 if(count[i]==show[i].length) {
-                                  for (var j in order[i].values) {
-                                    j[3] = '1';
+                                  for(int j=0;j<show[i].length;j++) {
+                                    (show[i][j])[3] = '1';
+                                    print('${(show[i][j])[3]}');
+
+                                    CollectionReference data = FirebaseFirestore.instance.collection("delivery");
+                                    await data.doc(docid[i]).update({"order.order${j}": show[i][j]});
                                   }
-                                  CollectionReference data = FirebaseFirestore.instance.collection("delivery");
-                                  await data.doc(docid[i]).update({"order": order[i]});
-                                  setState(() {
-                                   show.removeAt(i);
-                                   docid.removeAt(i);
-                                  });
+                                  count.clear();
+                                  checkvalue.clear();
+                                  show.clear();
+                                  docid.clear();
+                                  //getData();
                                 }
-                                print(show);
-                                print(docid);
+                                print('update show=$show');
+                                print('update id=$docid');
                               },
                               child: Text('Done',style:TextStyle(fontSize: 30)),
                             ),

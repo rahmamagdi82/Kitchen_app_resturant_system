@@ -142,11 +142,11 @@ int k=0;
                                     CollectionReference data = FirebaseFirestore.instance.collection("delivery");
                                     await data.doc(docid[i]).update({"order.order${j}": show[i][j]});
                                   }
-                                  count.clear();
-                                  checkvalue.clear();
-                                  show.clear();
-                                  docid.clear();
-                                  getData();
+                                  count.removeWhere((element) => element==count[i]);
+                                  checkvalue.removeWhere((element) => element==checkvalue[i]);
+                                  show.removeWhere((element) => element==show[i]);
+                                  docid.removeWhere((element) => element==docid[i]);
+                                  //getData();
                                 }
                                 print('update show=$show');
                                 print('update id=$docid');

@@ -17,24 +17,23 @@ class _MyHomePageState extends State<MyHomePage> {
 int k=0;
  getData()async{
    CollectionReference dat=FirebaseFirestore.instance.collection("delivery");
-   QuerySnapshot db = await dat.get();
+   QuerySnapshot db = await dat.where('finished',isEqualTo: '0').get();
     db.docs.forEach((element) {
-      int c=0;
       setState(() {
         checkvalue.add([]);
         show.add([]);
+        count.add(0);
+        docid.add(element.id);
         for(int j=0;j<(element.get('order')).length;j++){
           if((element.get('order'))['order${j}'][3]=='0'){
-            c++;
             checkvalue[k].add(false);
-            show[k].add((element.get('order'))['order${j}']);
-            if((element.get('order')).length == c ){
-              docid.add(element.id);
-              count.add(0);
+           }
+            else{
+              checkvalue[k].add(true);
+              count[k]++;
             }
-
+            show[k].add((element.get('order'))['order${j}']);
           }
-        }
       });
       k++;
     });
@@ -43,17 +42,16 @@ int k=0;
   @override
   void initState(){
     getData();
+    Future.delayed(Duration(seconds: 20),(){
+      Navigator.of(context).push(
+          MaterialPageRoute(
+              builder: (context) =>MyHomePage()));
+    });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    for(int i=0;i<show.length;i++){
-      show.removeWhere((element) => element.length==0);
-        if(checkvalue[i].isEmpty){
-        checkvalue.removeWhere((element) => element.length==0);
-      }
-    }
     print('show=$show');
     print('docid=$docid');
     print('cont $count');
@@ -103,19 +101,21 @@ int k=0;
                                   for(int m=0;m<show[i].length;m++)
                                     CheckboxListTile(
                                       title: Text((show[i][m])[1]+'x '+(show[i][m])[0]),
-                                      onChanged: (bool? value) {
+                                      onChanged: (bool? value) async{
                                         setState(() {
                                           if (checkvalue[i][m] == true) {
                                             checkvalue[i][m] = false;
                                             count[i]--;
-                                            print('incount= $count');
+                                            (show[i][m])[3] = '0';
                                           }
                                           else {
                                             checkvalue[i][m] = true;
                                             count[i]++;
-                                            print('incount= $count');
+                                            (show[i][m])[3] = '1';
                                           }
                                         });
+                                        CollectionReference data = FirebaseFirestore.instance.collection("delivery");
+                                        await data.doc(docid[i]).update({"order.order${m}": show[i][m]});
                                       },
                                       value:checkvalue[i][m],
                                     ),
@@ -134,34 +134,9 @@ int k=0;
                               ),
                               onPressed: ()  async{
                                 if(count[i]==show[i].length) {
-                                  for(int j=0;j<show[i].length;j++) {
-                                    (show[i][j])[3] = '1';
-                                    print('${(show[i][j])[3]}');
-
-                                    CollectionReference data = FirebaseFirestore.instance.collection("delivery");
-                                    await data.doc(docid[i]).update({"order.order${j}": show[i][j]});
-                                  }
-                                  Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                          builder: (context) =>MyHomePage()));
-                                  /*count.removeWhere((element) => element==count[i]);
-                                  checkvalue.removeWhere((element) => element==checkvalue[i]);
-                                  show.removeWhere((element) => element==show[i]);
-                                  docid.removeWhere((element) => element==docid[i]);*/
-                                  //getData();
-                                  /**/
-                                  /*await Future.delayed(Duration(minutes: 1),(){
-                                    setState(() {
-                                      count=[];
-                                      checkvalue=[];
-                                      show=[];
-                                      docid=[];
-                                    });
-                                    getData();
-                                  });*/
+                                  CollectionReference data = FirebaseFirestore.instance.collection("delivery");
+                                  await data.doc(docid[i]).update({"finished": '1'});
                                 }
-                                print('update show=$show');
-                                print('update id=$docid');
                               },
                               child: Text('Done',style:TextStyle(fontSize: 30)),
                             ),
@@ -237,13 +212,11 @@ int k=0;
                           ),
                         ),
                       ),*/
-                ],
-              )
+              ],
+            )
           ],
         ),
       ),
-
-
     );
   }
 }

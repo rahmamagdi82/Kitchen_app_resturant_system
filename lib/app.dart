@@ -11,10 +11,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List <int> count=[];
   List <List<bool>> checkvalue=[];
-  List order = [];
   List <List>show=[];
   List docid=[];
-  List id=[];
 
 int k=0;
  getData()async{
@@ -65,6 +63,7 @@ int k=0;
       appBar:AppBar(
         title: Text('The Kitchen',style: TextStyle(color: Colors.white,fontSize:30)),
         backgroundColor: Colors.black,
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         child:Column(

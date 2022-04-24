@@ -54,7 +54,7 @@ int k2=0;
       k++;
     });
    CollectionReference hall=FirebaseFirestore.instance.collection("In-Hall");
-   QuerySnapshot dh = await hall.where('finished',isEqualTo: '0').get();
+   QuerySnapshot dh = await hall.where('finished',isEqualTo: false).get();
    dh.docs.forEach((element) {
      setState(() {
        checkvalue2.add([]);
@@ -263,7 +263,7 @@ int k2=0;
                                   onPressed: ()  async{
                                     if(count2[i]==show2[i].length) {
                                       CollectionReference data2 = FirebaseFirestore.instance.collection("In-Hall");
-                                      await data2.doc(docid2[i]).update({"finished": '1'});
+                                      await data2.doc(docid2[i]).update({"finished": true});
                                     }
                                   },
                                   child: Text('Done',style:TextStyle(fontSize: 30)),

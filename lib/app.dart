@@ -105,15 +105,18 @@ sendNotifi(String body)async{
           'click_action': 'FLUTTER_NOTIFICATION_CLICK',
           'status': 'done'
         },
-        'to': await FirebaseMessaging.instance.getToken(),
+       'to':await FirebaseMessaging.instance.getToken()
+      // "cgodSgk1QNCq13vescMQep:APA91bH8au7pvmzNwT5JlneOUpt6EA1l3s31aPIiKJmwsM-CHauCIREu838wcpiW3SXQLPN6Fb-EpYofj7y32vsMxxNjAI-SL9hnZCtoFoFUAr5YfPjTAHnydUNcbLWWyEPFrmhfRpyZ"
       },
     ),
   );
 }
-
+String token='';
   getMessage(){
+    FirebaseMessaging.instance.getToken().then((value) {token=value!;
+    print("Token= ${token}");});
   FirebaseMessaging.onMessage.listen((event){
-print(event.notification?.body);
+  print(event.notification?.body);
   });
 }
 
@@ -134,7 +137,7 @@ print(event.notification?.body);
 
   @override
   Widget build(BuildContext context) {
-    print('show=$show');
+   /* print('show=$show');
     print('docid=$docid');
     print('time: $time');
     print('cont $count');
@@ -146,7 +149,7 @@ print(event.notification?.body);
     print('time2: $time2');
     print('cont2 $count2');
     print('t/f2 $checkvalue2');
-    print('len sh2=${show2.length}');
+    print('len sh2=${show2.length}');*/
 
     return Scaffold(
       appBar:AppBar(
@@ -307,7 +310,7 @@ print(event.notification?.body);
                                     if(count2[i]==show2[i].length) {
                                       CollectionReference data2 = FirebaseFirestore.instance.collection("In-Hall");
                                       await data2.doc(docid2[i]).update({"finished": true});
-                                      sendNotifi("Order on Talbe No. : ${tno[i]} is Done.");
+                                      sendNotifi("Order on Talbe No. ${tno[i]} is Done.");
                                     }
                                   },
                                   child: Text('Done',style:TextStyle(fontSize: 30)),

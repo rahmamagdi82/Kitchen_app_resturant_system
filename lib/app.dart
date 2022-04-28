@@ -1,6 +1,13 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:http/http.dart' as http;
+
+
+
+
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
@@ -78,8 +85,44 @@ int k2=0;
    });
  }
 
+
+ var serverToken="AAAAq241yYI:APA91bHo6UFGnCz242a_UVQCSV1_-Lrl63mpGCuCSPehHMkwHqsbBapF4h7JShO89ilk3aWkLz0lKE1zE_MMVhDGC67n_bOQohU5YOZt5akspPcH_cV0dzjeDO2JQyttcHs2uWv08Y4p";
+sendNotifi(String body)async{
+  await http.post(
+    Uri.parse('https://fcm.googleapis.com/fcm/send'),
+    headers: <String, String>{
+      'Content-Type': 'application/json',
+      'Authorization': 'key=$serverToken',
+    },
+    body: jsonEncode(
+      <String, dynamic>{
+        'notification': <String, dynamic>{
+          'body': body,
+          'title': 'The Kitchen'
+        },
+        'priority': 'high',
+        'data': <String, dynamic>{
+          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+          'status': 'done'
+        },
+        'to': await FirebaseMessaging.instance.getToken(),
+      },
+    ),
+  );
+}
+
+  getMessage(){
+  FirebaseMessaging.onMessage.listen((event){
+print(event.notification?.body);
+  });
+}
+
+
+
+
   @override
   void initState(){
+  getMessage();
     getData();
     Future.delayed(Duration(seconds: 20),(){
       Navigator.of(context).push(
@@ -264,6 +307,7 @@ int k2=0;
                                     if(count2[i]==show2[i].length) {
                                       CollectionReference data2 = FirebaseFirestore.instance.collection("In-Hall");
                                       await data2.doc(docid2[i]).update({"finished": true});
+                                      sendNotifi("Order on Talbe No. : ${tno[i]} is Done.");
                                     }
                                   },
                                   child: Text('Done',style:TextStyle(fontSize: 30)),

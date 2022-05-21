@@ -142,7 +142,7 @@ String token='';
   getMessage();
     getData();
     Future.delayed(Duration(seconds: 20),(){
-      Navigator.of(context).push(
+      Navigator.of(context).pushReplacement(
           MaterialPageRoute(
               builder: (context) =>MyHomePage()));
     });

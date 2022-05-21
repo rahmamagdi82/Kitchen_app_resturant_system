@@ -6,9 +6,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 
 
-
-
-
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
@@ -30,6 +27,8 @@ class _MyHomePageState extends State<MyHomePage> {
   List time2=[];
   List tno=[];
 
+  List waiterid=[];
+  List tokens=[];
   String formattedDate(timeStamp){
     var dateFormTimeStamp=DateTime.fromMillisecondsSinceEpoch(timeStamp.seconds*1000);
     return DateFormat('h:mm a').format(dateFormTimeStamp);
@@ -64,6 +63,7 @@ int k2=0;
    QuerySnapshot dh = await hall.where('finished',isEqualTo: false).get();
    dh.docs.forEach((element) {
      setState(() {
+       waiterid.add(element.get("waiter id"));
        checkvalue2.add([]);
        show2.add([]);
        count2.add(0);
@@ -83,11 +83,29 @@ int k2=0;
      });
      k2++;
    });
+
+
+   CollectionReference waiter=FirebaseFirestore.instance.collection("employee");
+   QuerySnapshot dt = await waiter.where("jobtype",isEqualTo: "Waiter").get();
+   dt.docs.forEach((element) {
+     setState(() {
+       for(int i=0;i<waiterid.length;i++){
+         if(element.id==waiterid[i]){
+           tokens.add(element.get("token"));
+         }
+       }
+
+     });
+   });
+
+
+
  }
 
 
+
  var serverToken="AAAAq241yYI:APA91bHo6UFGnCz242a_UVQCSV1_-Lrl63mpGCuCSPehHMkwHqsbBapF4h7JShO89ilk3aWkLz0lKE1zE_MMVhDGC67n_bOQohU5YOZt5akspPcH_cV0dzjeDO2JQyttcHs2uWv08Y4p";
-sendNotifi(String body)async{
+sendNotifi(String body,int n)async{
   await http.post(
     Uri.parse('https://fcm.googleapis.com/fcm/send'),
     headers: <String, String>{
@@ -105,8 +123,7 @@ sendNotifi(String body)async{
           'click_action': 'FLUTTER_NOTIFICATION_CLICK',
           'status': 'done'
         },
-       'to':await FirebaseMessaging.instance.getToken()
-      // "cgodSgk1QNCq13vescMQep:APA91bH8au7pvmzNwT5JlneOUpt6EA1l3s31aPIiKJmwsM-CHauCIREu838wcpiW3SXQLPN6Fb-EpYofj7y32vsMxxNjAI-SL9hnZCtoFoFUAr5YfPjTAHnydUNcbLWWyEPFrmhfRpyZ"
+        'to':tokens[n]
       },
     ),
   );
@@ -120,10 +137,7 @@ String token='';
   });
 }
 
-
-
-
-  @override
+@override
   void initState(){
   getMessage();
     getData();
@@ -150,7 +164,8 @@ String token='';
     print('cont2 $count2');
     print('t/f2 $checkvalue2');
     print('len sh2=${show2.length}');*/
-
+print(waiterid);
+print("list of tokins= "+"${tokens}");
     return Scaffold(
       appBar:AppBar(
         title: Text('The Kitchen',style: TextStyle(color: Colors.white,fontSize:30)),
@@ -310,7 +325,7 @@ String token='';
                                     if(count2[i]==show2[i].length) {
                                       CollectionReference data2 = FirebaseFirestore.instance.collection("In-Hall");
                                       await data2.doc(docid2[i]).update({"finished": true});
-                                      sendNotifi("Order on Talbe No. ${tno[i]} is Done.");
+                                      sendNotifi("Order on Talbe No. ${tno[i]} is Done.",i);
                                     }
                                   },
                                   child: Text('Done',style:TextStyle(fontSize: 30)),

@@ -184,9 +184,11 @@ print("list of tokins= "+"${tokens}");*/
             //for(int i=0;i<show.length;i++)
               //if(show[i].isNotEmpty)
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Column(
-                    children: [
+                  Expanded(
+                      child: Column(
+                        children: [
                       for(int i=0;i<show.length;i++)
                       Card(
                         child: Container(

@@ -350,7 +350,7 @@ print("list of tokins= "+"${tokens}");*/
                                         "from": 'The Kitchen',
                                         "to": waiterid[i],
                                         "read": false,
-                                        "message": "Order on Talbe No. ${tno[i]} is Done.",
+                                        "message": "Order on Table No. ${tno[i]} is Done.",
                                         "date": DateTime.now()
                                       }).then((value) {
                                         myid = value.id;

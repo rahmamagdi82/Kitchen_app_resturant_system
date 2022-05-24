@@ -167,7 +167,7 @@ String token='';
     print('len sh2=${show2.length}');
 print(waiterid);
 print("list of tokins= "+"${tokens}");*/
-
+    double width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar:AppBar(
         title: Text('The Kitchen',style: TextStyle(color: Colors.white,fontSize:30)),
@@ -192,13 +192,13 @@ print("list of tokins= "+"${tokens}");*/
                       for(int i=0;i<show.length;i++)
                       Card(
                         child: Container(
-                          width:280,
+                          width:(width-24)/2,
                           height: 300,
                           child:
                           Column(
                             children: [
                               Container(
-                                width:280,
+                                width:(width-24)/2,
                                 height: 50,
                                 color:(count[i]==0)? Colors.grey:((count[i]==show[i].length)?Colors.green:Colors.amber),
                                 child: Row(
@@ -281,12 +281,12 @@ print("list of tokins= "+"${tokens}");*/
                     for(int i=0;i<show2.length;i++)
                       Card(
                         child: Container(
-                          width:280,
+                          width:(width-24)/2,
                           height: 300,
                           child: Column(
                             children: [
                               Container(
-                                width:280,
+                                width:(width-24)/2,
                                 height: 50,
                                 color: (count2[i]==0)? Colors.grey:((count2[i]==show2[i].length)?Colors.green:Colors.amber),
                                 child: Row(

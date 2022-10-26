@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
@@ -8,136 +9,199 @@ class MyHomePage extends StatefulWidget {
   createState() => _MyHomePageState();
 }
 class _MyHomePageState extends State<MyHomePage> {
-  List <List<List<String>>> order=[[['x2','pancack'],['x2','tea'],['x2','pancack'],['x2','tea'],['x2','pancack'],['x2','tea']],[['x1','english breakfast']]];
+
   List <int> count=[];
   List <List<bool>> checkvalue=[];
+  List <List>show=[];
+  List docid=[];
+  List time=[];
 
-  List list = [];
-  CollectionReference bff = FirebaseFirestore.instance.collection("menu");
+  List <int> count2=[];
+  List <List<bool>> checkvalue2=[];
+  List <List>show2=[];
+  List docid2=[];
+  List time2=[];
+  List tno=[];
 
-  getData() async {
-    QuerySnapshot dbf = await bff.where('type',isEqualTo:"Drinks").get();
-    dbf.docs.forEach((element) {
+  String formattedDate(timeStamp){
+    var dateFormTimeStamp=DateTime.fromMillisecondsSinceEpoch(timeStamp.seconds*1000);
+    return DateFormat('h:mm a').format(dateFormTimeStamp);
+  }
+
+int k=0;
+int k2=0;
+ getData()async{
+   CollectionReference dat=FirebaseFirestore.instance.collection("delivery");
+   QuerySnapshot db = await dat.where('finished',isEqualTo: '0').get();
+    db.docs.forEach((element) {
       setState(() {
-        list.add(element.data());
-      });
-      print('kkkkkkkkkkkkkkk');
-    });
-  }
-
-  void data(){
-    setState((){
-      for(int i=0;i<order.length;i++){
-        count.add(0);
         checkvalue.add([]);
-        for(int j=0;j<order[i].length;j++){
-          checkvalue[i].add(false);
-        }
-      }
-      print(count);
-      print(checkvalue);
-      print('kklllllllllllll');
+        show.add([]);
+        count.add(0);
+        docid.add(element.id);
+        time.add(formattedDate(element.get('date')));
+        for(int j=0;j<(element.get('order')).length;j++){
+          if((element.get('order'))['order${j}'][3]=='0'){
+            checkvalue[k].add(false);
+           }
+            else{
+              checkvalue[k].add(true);
+              count[k]++;
+            }
+            show[k].add((element.get('order'))['order${j}']);
+          }
+      });
+      k++;
     });
-  }
-  Future<void> _refresh()async {
-    order.add([['x3','waffel']]);
-    data();
-    return Future.delayed(Duration(seconds: 2));
-  }
+   CollectionReference hall=FirebaseFirestore.instance.collection("In-Hall");
+   QuerySnapshot dh = await hall.where('finished',isEqualTo: false).get();
+   dh.docs.forEach((element) {
+     setState(() {
+       checkvalue2.add([]);
+       show2.add([]);
+       count2.add(0);
+       docid2.add(element.id);
+       tno.add(element.get('table'));
+       time2.add(formattedDate(element.get('date')));
+       for(int j=0;j<(element.get('order')).length;j++){
+         if((element.get('order'))['order${j}'][3]=='0'){
+           checkvalue2[k2].add(false);
+         }
+         else{
+           checkvalue2[k2].add(true);
+           count2[k2]++;
+         }
+         show2[k2].add((element.get('order'))['order${j}']);
+       }
+     });
+     k2++;
+   });
+ }
+
+  @override
   void initState(){
-    data();
     getData();
+    Future.delayed(Duration(seconds: 20),(){
+      Navigator.of(context).push(
+          MaterialPageRoute(
+              builder: (context) =>MyHomePage()));
+    });
     super.initState();
   }
 
-
   @override
   Widget build(BuildContext context) {
+    print('show=$show');
+    print('docid=$docid');
+    print('time: $time');
+    print('cont $count');
+    print('t/f $checkvalue');
+    print('len sh=${show.length}');
+
+    print('show2=$show2');
+    print('docid2=$docid2');
+    print('time2: $time2');
+    print('cont2 $count2');
+    print('t/f2 $checkvalue2');
+    print('len sh2=${show2.length}');
+
     return Scaffold(
       appBar:AppBar(
         title: Text('The Kitchen',style: TextStyle(color: Colors.white,fontSize:30)),
         backgroundColor: Colors.black,
+        automaticallyImplyLeading: false,
       ),
-      body:RefreshIndicator(
-        color:Colors.teal,
-        strokeWidth: 3,
-        onRefresh: _refresh,
-        child: SingleChildScrollView(
-          child:Column(
-            children: [
-              Container(
-                //padding: EdgeInsets.all(3),
+      body: SingleChildScrollView(
+        child:Column(
+          children: [
+            Container(
+              //padding: EdgeInsets.all(3),
                 child: Text('Unprepared Orders :',style: TextStyle(color: Colors.black,fontSize:28)),
-              ),
-              for(int i=0;i<order.length;i=i+2)
-                Row(
-                  children: [
-                    Card(
-                      child: Container(
-                        width:280,
-                        height: 300,
-                        child: Column(
-                          children: [
-                            Container(
-                              width:280,
-                              height: 50,
-                              color: Colors.black,
-                              child: Row(
-                                mainAxisAlignment:MainAxisAlignment.spaceAround,
-                                children: [
-                                  Text("Order#20 ",style: TextStyle(color: Colors.white,fontSize:22)),
-                                  Text("Table11 ",style: TextStyle(color: Colors.white,fontSize:22)),
-                                  Text("In-Hall",style: TextStyle(color: Colors.white,fontSize:22)),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              height: 190,
-                              child:SingleChildScrollView(
-                                padding: EdgeInsets.fromLTRB(8, 0, 0, 0),
-                                child: Column(
-                                  children:[
-                                    for(int j = 0; j < order[i].length; j++)
-                                      CheckboxListTile(
-                                        title: Text('${order[i][j][0]+' '+order[i][j][1]}'),
-                                        onChanged: (bool? value) {
-                                          setState(() {
-                                            if (checkvalue[i][j] == true) {
-                                              checkvalue[i][j] = false;
-                                              count[i]--;
-                                            }
-                                            else {
-                                              checkvalue[i][j] = true;
-                                              count[i]++;
-                                            }
-                                          });
-                                          print(count);
-                                        },
-                                        value: checkvalue[i][j],
-                                      ),
+            ),
+            //for(int i=0;i<show.length;i++)
+              //if(show[i].isNotEmpty)
+              Row(
+                children: [
+                  Expanded(child: Column(
+                    children: [
+                      for(int i=0;i<show.length;i++)
+                      Card(
+                        child: Container(
+                          width:280,
+                          height: 300,
+                          child:
+                          Column(
+                            children: [
+                              Container(
+                                width:280,
+                                height: 50,
+                                color:(count[i]==0)? Colors.grey:((count[i]==show[i].length)?Colors.green:Colors.amber),
+                                child: Row(
+                                  mainAxisAlignment:MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Text(time[i],style: TextStyle(color: Colors.white,fontSize:22)),
+                                    Text("Delivery",style: TextStyle(color: Colors.white,fontSize:22)),
                                   ],
                                 ),
                               ),
-                            ),
-                            Padding(padding:EdgeInsets.fromLTRB(0,0,0,8) ,
-                              child:ElevatedButton(
-                                style:ButtonStyle(
-                                    backgroundColor:MaterialStateProperty.all<Color>(count[i]==order[i].length ? Colors.teal : Colors.black26),
-                                    fixedSize:MaterialStateProperty.all(Size(150,45)),
-                                    shape:MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
-                                        borderRadius:BorderRadius.circular(18)
-                                    ))
+                              Container(
+                                height: 190,
+                                child:SingleChildScrollView(
+                                  padding: EdgeInsets.fromLTRB(8, 0, 0, 0),
+                                  child: Column(
+                                    children:[
+                                      for(int m=0;m<show[i].length;m++)
+                                        CheckboxListTile(
+                                          title: Text((show[i][m])[1]+'x '+(show[i][m])[0]),
+                                          onChanged: (bool? value) async{
+                                            setState(() {
+                                              if (checkvalue[i][m] == true) {
+                                                checkvalue[i][m] = false;
+                                                count[i]--;
+                                                (show[i][m])[3] = '0';
+                                              }
+                                              else {
+                                                checkvalue[i][m] = true;
+                                                count[i]++;
+                                                (show[i][m])[3] = '1';
+                                              }
+                                            });
+                                            CollectionReference data = FirebaseFirestore.instance.collection("delivery");
+                                            await data.doc(docid[i]).update({"order.order${m}": show[i][m]});
+                                          },
+                                          value:checkvalue[i][m],
+                                        ),
+                                    ],
+                                  ),
                                 ),
-                                onPressed: () {},
-                                child: Text('Done',style:TextStyle(fontSize: 30)),
                               ),
-                            ),
-                          ],
+                              Padding(padding:EdgeInsets.fromLTRB(0,0,0,8) ,
+                                child:ElevatedButton(
+                                  style:ButtonStyle(
+                                      backgroundColor:MaterialStateProperty.all<Color>(count[i]==show[i].length ? Colors.green : Colors.grey),
+                                      fixedSize:MaterialStateProperty.all(Size(150,45)),
+                                      shape:MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                          borderRadius:BorderRadius.circular(18)
+                                      ))
+                                  ),
+                                  onPressed: ()  async{
+                                    if(count[i]==show[i].length) {
+                                      CollectionReference data = FirebaseFirestore.instance.collection("delivery");
+                                      await data.doc(docid[i]).update({"finished": '1'});
+                                    }
+                                  },
+                                  child: Text('Done',style:TextStyle(fontSize: 30)),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(width: 80),
-                    if(i<order.length -1)
+                    ],
+                  )),
+                Expanded(child: Column(
+                  children: [
+                    for(int i=0;i<show2.length;i++)
                       Card(
                         child: Container(
                           width:280,
@@ -147,13 +211,12 @@ class _MyHomePageState extends State<MyHomePage> {
                               Container(
                                 width:280,
                                 height: 50,
-                                color: Colors.black,
+                                color: (count2[i]==0)? Colors.grey:((count2[i]==show2[i].length)?Colors.green:Colors.amber),
                                 child: Row(
                                   mainAxisAlignment:MainAxisAlignment.spaceAround,
                                   children: [
-                                    Text("Order#20 ",style: TextStyle(color: Colors.white,fontSize:22)),
-                                    Text("Table11 ",style: TextStyle(color: Colors.white,fontSize:22)),
-                                    Text("In-Hall",style: TextStyle(color: Colors.white,fontSize:22)),
+                                    Text(time2[i],style: TextStyle(color: Colors.white,fontSize:22)),
+                                    Text("Table:${tno[i]}",style: TextStyle(color: Colors.white,fontSize:22)),
                                   ],
                                 ),
                               ),
@@ -161,25 +224,28 @@ class _MyHomePageState extends State<MyHomePage> {
                                 height: 190,
                                 child:SingleChildScrollView(
                                   padding: EdgeInsets.fromLTRB(8, 0, 0, 0),
-                                  child:Column(
+                                  child: Column(
                                     children:[
-                                      for(int j = 0; j < order[i+1].length; j++)
+                                      for(int m=0;m<show2[i].length;m++)
                                         CheckboxListTile(
-                                          title: Text('${order[i+1][j][0]+' '+order[i+1][j][1]}'),
-                                          onChanged: (bool? value) {
+                                          title: Text((show2[i][m])[1]+'x '+(show2[i][m])[0]),
+                                          onChanged: (bool? value) async{
                                             setState(() {
-                                              if (checkvalue[i+1][j] == true) {
-                                                checkvalue[i+1][j] = false;
-                                                count[i+1]--;
+                                              if (checkvalue2[i][m] == true) {
+                                                checkvalue2[i][m] = false;
+                                                count2[i]--;
+                                                (show2[i][m])[3] = '0';
                                               }
                                               else {
-                                                checkvalue[i+1][j] = true;
-                                                count[i+1]++;
+                                                checkvalue2[i][m] = true;
+                                                count2[i]++;
+                                                (show2[i][m])[3] = '1';
                                               }
                                             });
-                                            print(count);
+                                            CollectionReference data2 = FirebaseFirestore.instance.collection("In-Hall");
+                                            await data2.doc(docid2[i]).update({"order.order${m}": show2[i][m]});
                                           },
-                                          value: checkvalue[i+1][j],
+                                          value:checkvalue2[i][m],
                                         ),
                                     ],
                                   ),
@@ -188,13 +254,18 @@ class _MyHomePageState extends State<MyHomePage> {
                               Padding(padding:EdgeInsets.fromLTRB(0,0,0,8) ,
                                 child:ElevatedButton(
                                   style:ButtonStyle(
-                                      backgroundColor:MaterialStateProperty.all<Color>(count[i+1]==order[i+1].length ? Colors.teal : Colors.black26),
+                                      backgroundColor:MaterialStateProperty.all<Color>(count2[i]==show2[i].length ? Colors.green : Colors.grey),
                                       fixedSize:MaterialStateProperty.all(Size(150,45)),
                                       shape:MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                                           borderRadius:BorderRadius.circular(18)
                                       ))
                                   ),
-                                  onPressed: () {},
+                                  onPressed: ()  async{
+                                    if(count2[i]==show2[i].length) {
+                                      CollectionReference data2 = FirebaseFirestore.instance.collection("In-Hall");
+                                      await data2.doc(docid2[i]).update({"finished": true});
+                                    }
+                                  },
                                   child: Text('Done',style:TextStyle(fontSize: 30)),
                                 ),
                               ),
@@ -204,8 +275,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                   ],
                 )
-            ],
-          ),
+                ),
+              ],
+           )
+          ],
         ),
       ),
     );

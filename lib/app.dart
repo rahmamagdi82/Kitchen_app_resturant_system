@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:http/http.dart' as http;
+
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
@@ -23,6 +27,10 @@ class _MyHomePageState extends State<MyHomePage> {
   List time2=[];
   List tno=[];
 
+  List waiterid=[];
+  List tokens=[];
+
+  List duserid=[];
   String formattedDate(timeStamp){
     var dateFormTimeStamp=DateTime.fromMillisecondsSinceEpoch(timeStamp.seconds*1000);
     return DateFormat('h:mm a').format(dateFormTimeStamp);
@@ -39,6 +47,7 @@ int k2=0;
         show.add([]);
         count.add(0);
         docid.add(element.id);
+        duserid.add(element.get("user id"));
         time.add(formattedDate(element.get('date')));
         for(int j=0;j<(element.get('order')).length;j++){
           if((element.get('order'))['order${j}'][3]=='0'){
@@ -57,6 +66,7 @@ int k2=0;
    QuerySnapshot dh = await hall.where('finished',isEqualTo: false).get();
    dh.docs.forEach((element) {
      setState(() {
+       waiterid.add(element.get("waiter id"));
        checkvalue2.add([]);
        show2.add([]);
        count2.add(0);
@@ -76,13 +86,64 @@ int k2=0;
      });
      k2++;
    });
+
+
+   CollectionReference waiter=FirebaseFirestore.instance.collection("employee");
+   QuerySnapshot dt = await waiter.where("jobtype",isEqualTo: "Waiter").get();
+   dt.docs.forEach((element) {
+     setState(() {
+       for(int i=0;i<waiterid.length;i++){
+         if(element.id==waiterid[i]){
+           tokens.add(element.get("token"));
+         }
+       }
+
+     });
+   });
+
  }
 
-  @override
+  int getSum(int n,int p){
+    double addedCoins=0;
+    addedCoins+=double.parse(show[n][p][2]) ;
+    addedCoins+=50;
+    int total=addedCoins.toInt();
+    return total;
+  }
+
+ var serverToken="AAAAq241yYI:APA91bHo6UFGnCz242a_UVQCSV1_-Lrl63mpGCuCSPehHMkwHqsbBapF4h7JShO89ilk3aWkLz0lKE1zE_MMVhDGC67n_bOQohU5YOZt5akspPcH_cV0dzjeDO2JQyttcHs2uWv08Y4p";
+sendNotifi(String body,int n,String notid)async{
+  await http.post(
+    Uri.parse('https://fcm.googleapis.com/fcm/send'),
+    headers: <String, String>{
+      'Content-Type': 'application/json',
+      'Authorization': 'key=$serverToken',
+    },
+    body: jsonEncode(
+      <String, dynamic>{
+        'notification': <String, dynamic>{
+          'body': body,
+          'title': 'The Kitchen'
+        },
+        'priority': 'high',
+        'data': <String, dynamic>{
+          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+          'status': 'done',
+          'id':notid,
+        },
+        'to':tokens[n]
+      },
+    ),
+  );
+}
+String token='';
+
+@override
   void initState(){
+  //getMessage();
     getData();
     Future.delayed(Duration(seconds: 20),(){
-      Navigator.of(context).push(
+      Navigator.of(context).pushReplacement(
           MaterialPageRoute(
               builder: (context) =>MyHomePage()));
     });
@@ -91,7 +152,7 @@ int k2=0;
 
   @override
   Widget build(BuildContext context) {
-    print('show=$show');
+   /*print('show=${show[3][0][2]}');
     print('docid=$docid');
     print('time: $time');
     print('cont $count');
@@ -104,6 +165,8 @@ int k2=0;
     print('cont2 $count2');
     print('t/f2 $checkvalue2');
     print('len sh2=${show2.length}');
+print(waiterid);
+print("list of tokins= "+"${tokens}");*/
 
     return Scaffold(
       appBar:AppBar(
@@ -121,9 +184,11 @@ int k2=0;
             //for(int i=0;i<show.length;i++)
               //if(show[i].isNotEmpty)
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Column(
-                    children: [
+                  Expanded(
+                      child: Column(
+                        children: [
                       for(int i=0;i<show.length;i++)
                       Card(
                         child: Container(
@@ -188,6 +253,18 @@ int k2=0;
                                     if(count[i]==show[i].length) {
                                       CollectionReference data = FirebaseFirestore.instance.collection("delivery");
                                       await data.doc(docid[i]).update({"finished": '1'});
+                                      DocumentReference u = FirebaseFirestore.instance.collection("users").doc(duserid[i]);
+                                      var c = await u.get();
+                                      int coins=0;
+                                      num totalcoins=0;
+                                      setState(() {
+                                        coins=c.get("coins");
+                                        for(int m=0;m<show[i].length;m++) {
+                                          totalcoins = getSum(i, m) + coins;
+                                        }
+                                      });
+                                      print(totalcoins);
+                                      await u.update({"coins":totalcoins});
                                     }
                                   },
                                   child: Text('Done',style:TextStyle(fontSize: 30)),
@@ -262,8 +339,23 @@ int k2=0;
                                   ),
                                   onPressed: ()  async{
                                     if(count2[i]==show2[i].length) {
-                                      CollectionReference data2 = FirebaseFirestore.instance.collection("In-Hall");
-                                      await data2.doc(docid2[i]).update({"finished": true});
+                                      CollectionReference data2 = FirebaseFirestore
+                                          .instance.collection("In-Hall");
+                                      await data2.doc(docid2[i]).update(
+                                          {"finished": true});
+                                      String myid = '';
+                                      CollectionReference not = FirebaseFirestore
+                                          .instance.collection("notification");
+                                      not.add({
+                                        "from": 'The Kitchen',
+                                        "to": waiterid[i],
+                                        "read": false,
+                                        "message": "Order on Table No. ${tno[i]} is Done.",
+                                        "date": DateTime.now()
+                                      }).then((value) {
+                                        myid = value.id;
+                                        sendNotifi("Order on Table No. ${tno[i]} is Done.", i,myid);
+                                      });
                                     }
                                   },
                                   child: Text('Done',style:TextStyle(fontSize: 30)),
